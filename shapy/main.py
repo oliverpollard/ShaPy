@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from shapely.geometry import Point, Polygon
+import matplotlib.pyplot as plt
 
 
 def calc_polygon_dist(x, y):
@@ -262,6 +263,26 @@ class PolygonInterp:
             interp_polygon = calc_close_holes(interp_polygon)
 
         return interp_polygon
+    
+    def plot_angle(self, async_angle_offset=None, centre_point=None):
+        if centre_point is None:
+            centre_point = np.array(
+                [coord[0] for coord in self.exterior_polygon.centroid.xy]
+            )
+        if async_angle_offset is None:
+            async_angle_offset = 0
+
+        v1 = centre_point + np.array([0, 1]) - centre_point
+        v2 = self.ext_coords - centre_point
+        angle = calc_angle(v1=v1, v2=v2.T)
+        async_value = np.sin(2 * np.pi * angle + async_angle_offset)
+
+        fig, ax = plt.subplots()
+        ax.scatter(*self.int_coords.T)
+        ax.scatter(*self.ext_coords.T, c=async_value, cmap="RdBu")
+        return fig, ax
+
+        
 
     @classmethod
     def from_polygons(cls, interior_polygon, exterior_polygon, sample_size):
