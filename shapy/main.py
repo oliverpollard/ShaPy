@@ -277,7 +277,7 @@ class PolygonInterp:
         v1 = centre_point + np.array([0, 1]) - centre_point
         v2 = self.ext_coords - centre_point
         angle = calc_angle(v1=v1, v2=v2.T)
-        async_value = np.sin(2 * np.pi * angle + async_angle_offset)
+        async_value = np.sin(2 * np.pi * angle - async_angle_offset)
 
         fig, ax = plt.subplots()
         ax.scatter(*self.int_coords.T)
