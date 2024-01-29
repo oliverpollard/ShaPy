@@ -343,6 +343,10 @@ class PolygonInterp:
     def int_coords(self):
         return np.array(self.interior_polygon.exterior.coords)
 
+    @property
+    def ext_centre_point(self):
+        return np.array([coord[0] for coord in self.exterior_polygon.centroid.xy])
+
     def interp_angle(self, centre_point, angle):
         dist = np.sin(2 * np.pi * angle)
 
@@ -359,16 +363,14 @@ class PolygonInterp:
     ):
         if angle_async is True:
             if centre_point is None:
-                centre_point = np.array(
-                    [coord[0] for coord in self.exterior_polygon.centroid.xy]
-                )
+                centre_point = self.ext_centre_point
             if async_angle_offset is None:
                 async_angle_offset = 0
 
-            v1 = centre_point + np.array([0, 1]) - centre_point
+            v1 = np.array([0, 1])
             v2 = self.ext_coords - centre_point
             angle = calc_angle(v1=v1, v2=v2.T)
-            async_value = np.sin(2 * np.pi * angle + async_angle_offset)
+            async_value = np.sin(2 * np.pi * angle - async_angle_offset)
             async_power = calc_power(async_value, async_power)
 
             dist = (dist**async_power).reshape(-1, 1)
@@ -399,6 +401,24 @@ class PolygonInterp:
             interp_polygon = calc_close_holes(interp_polygon)
 
         return interp_polygon
+
+    def plot_angle(self, async_angle_offset=None, centre_point=None):
+        if centre_point is None:
+            centre_point = np.array(
+                [coord[0] for coord in self.exterior_polygon.centroid.xy]
+            )
+        if async_angle_offset is None:
+            async_angle_offset = 0
+
+        v1 = centre_point + np.array([0, 1]) - centre_point
+        v2 = self.ext_coords - centre_point
+        angle = calc_angle(v1=v1, v2=v2.T)
+        async_value = np.sin(2 * np.pi * angle - async_angle_offset)
+
+        fig, ax = plt.subplots()
+        ax.scatter(*self.int_coords.T)
+        ax.scatter(*self.ext_coords.T, c=async_value, cmap="RdBu")
+        return fig, ax
 
     @classmethod
     def from_polygons(cls, interior_polygon, exterior_polygon, sample_size):
